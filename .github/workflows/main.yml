@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: SonarSource/sonarqube-scan-action@v5 
+        uses: SonarSource/sonarqube-scan-action@v7
         with:
           fetch-depth: 0
 

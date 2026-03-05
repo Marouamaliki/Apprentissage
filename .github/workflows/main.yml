@@ -35,12 +35,12 @@ jobs:
           fetch-depth: 0
 
       - name: GitHub/SonarCloud Integration
-        uses: stevethedev/github-action-sonarcloud@v0.1
+        uses: SonarSource/sonarcloud-github-action@master
         continue-on-error: false
         with:
           args: >-
             -Dsonar.projectKey=Marouamaliki_Apprentissage
-            -Dsonar.organisation=marouamaliki
+            -Dsonar.organization=marouamaliki
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/.git/**
             -Dsonar.verbose=true
         env:

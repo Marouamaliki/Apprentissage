@@ -1,54 +1,44 @@
 name: Workflow CI Build & Push Images Microservices
 
-on: 
+on:
   push:
     branches:
       - main
-jobs:
-  build-push:
-    runs-on: self-hosted
 
+jobs:
+  Sonarqube-Analysis:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - uses: sonarsource/sonarqube-quality-gate-action@master
+        timeout-minutes: 3
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  build-push:
+    needs: Sonarqube-Analysis
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN  }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build and Push microservices1
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/microservices1:latest ./microservices1
-          docker push  ${{ secrets.DOCKERHUB_USERNAME  }}/microservices1:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/microservices1:latest
 
       - name: Build and Push microservices2
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/microservices2:latest ./microservices2
-          docker push  ${{ secrets.DOCKERHUB_USERNAME  }}/microservices2:latest
-
-  Sonarqube-Analysis:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: SonarSource/sonarqube-scan-action@v7
-        with:
-          fetch-depth: 0
-
-      - name: GitHub/SonarCloud Integration
-        uses: SonarSource/sonarcloud-github-action@master
-        continue-on-error: false
-        with:
-          args: >-
-            -Dsonar.projectKey=Marouamaliki_Apprentissage
-            -Dsonar.organization=marouamaliki
-            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/.git/**
-            -Dsonar.verbose=true
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      - name: SonarQube Quality Gate check
-        uses: antonioaversa/sonarcloud-github-action@v4.0.0
-        timeout-minutes: 3
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/microservices2:latest
